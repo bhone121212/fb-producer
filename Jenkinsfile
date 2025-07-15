@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'bhonebhone/fb-api'
+        IMAGE_NAME = 'bhonebhone/fb-producer'
         K8S_NAMESPACE = "fb-crawler-apps"
         VERSION_FILE = 'version.txt'
     }
@@ -224,8 +224,8 @@ pipeline {
                         sh '''
                             echo "🔄 Updating Kubernetes YAML with image: $FULL_IMAGE"
 
-                            sed -i "s|image:.*|image: $FULL_IMAGE|" k8s/api-controller.yaml
-                            sed -i "s|image:.*|image: $FULL_IMAGE|" k8s/api-service.yaml
+                            sed -i "s|image:.*|image: $FULL_IMAGE|" k8s/producer-controller.yaml
+                            
 
                             for file in k8s/*.yaml; do
                                 sed -i "s|^namespace:.*|namespace: $K8S_NAMESPACE|" "$file"
@@ -237,7 +237,7 @@ pipeline {
                             if ! git diff --quiet k8s/; then
                                 git add k8s/
                                 git commit -m "Update image to $FULL_IMAGE"
-                                git remote set-url origin https://$GITHUB_TOKEN@github.com/bhone121212/fb-api.git
+                                git remote set-url origin https://$GITHUB_TOKEN@github.com/bhone121212/fb-producer.git
                                 git push origin HEAD:main
                                 echo "✅ GitHub pushed with new image tag"
                             else
@@ -245,11 +245,7 @@ pipeline {
                             fi
 
                             echo "🚀 Applying Kubernetes resources to $K8S_NAMESPACE"
-                            kubectl apply -n $K8S_NAMESPACE -f k8s/api-controller.yaml
-                            kubectl apply -n $K8S_NAMESPACE -f k8s/api-service.yaml
-                            kubectl apply -n $K8S_NAMESPACE -f k8s/rabbitmq-configmap.yaml
-                            kubectl apply -n $K8S_NAMESPACE -f k8s/rabbitmq-controller.yaml
-                            kubectl apply -n $K8S_NAMESPACE -f k8s/rabbitmq-service.yaml
+                            kubectl apply -n $K8S_NAMESPACE -f k8s/producer-controller.yaml
                         '''
                     }
                 }
